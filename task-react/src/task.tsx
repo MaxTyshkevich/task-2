@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo, useCallback } from 'react';
 
 
 type Mode = 'add' | 'remove';
@@ -24,7 +24,7 @@ const RenderCountLabel = ({
   );
 };
 
-const AddToEndButton = ({ onClick }: { onClick: () => void }) => {
+const AddToEndButton =  memo(({ onClick }: { onClick: () => void }) => {
   const counter = useRenderCounter();
   return (
     <div className="button">
@@ -32,9 +32,9 @@ const AddToEndButton = ({ onClick }: { onClick: () => void }) => {
       <RenderCountLabel label="Button" count={counter} />
     </div>
   );
-};
+});
 
-const AddToStartButton = ({ onClick }: { onClick: () => void }) => {
+const AddToStartButton = memo(({ onClick }: { onClick: () => void }) => {
   const counter = useRenderCounter();
   return (
     <div>
@@ -42,9 +42,9 @@ const AddToStartButton = ({ onClick }: { onClick: () => void }) => {
       <RenderCountLabel label="Button" count={counter} />
     </div>
   );
-};
+});
 
-const ChangeModeButton = ({
+const ChangeModeButton = memo(({
   action,
   onClick,
 }: {
@@ -58,9 +58,9 @@ const ChangeModeButton = ({
       <RenderCountLabel label="Button" count={counter} />
     </div>
   );
-};
+});
 
-const ListItem = ({
+const ListItem = memo(({
   item,
   onRemove,
 }: {
@@ -76,38 +76,47 @@ const ListItem = ({
       </button>
     </li>
   );
-};
+});
 
 let index = 0;
 
 const List = () => {
+
+  const refIndex = useRef(0)
   const counter = useRenderCounter();
   const [items, setItems] = useState<string[]>([]);
   const [action, setAction] = useState<Mode>('add');
 
-  const handleChangeAction = () => {
+  const handleChangeAction = useCallback(() => {
     setAction((prev) => (prev === 'add' ? 'remove' : 'add'));
-  };
+  },[]);
 
   const handlRemoveItems = () => {
     setItems((prev) => prev.slice(0, prev.length - 1));
   };
 
-  const handleRemoveItem = () => {};
+  const handleRemoveItem = useCallback((item: string) => {
+    setItems((prev) => prev.filter((i) => i !== item));
+  },[]);
 
-  const handleAddItem = () => {
+  const handleAddItem = useCallback(() => {
     index++;
     setItems((prev) => [...prev, `${index}-item`]);
-  };
+  },[]);
 
-  const handleAddToStart = () => {};
+  const handleAddToStart = useCallback(() => {
+    index++;
+    setItems((prev) => [`${index}-item`, ...prev]);
+  },[]);
 
   useEffect(() => {
-    setTimeout(
+   const timerId = setInterval(
       () => (action === 'add' ? handleAddItem() : handlRemoveItems()),
       1000
     );
-  });
+
+    return () => clearInterval(timerId); 
+  }, [action]);
 
   return (
     <ul className="list">
@@ -120,7 +129,7 @@ const List = () => {
         <AddToEndButton onClick={handleAddItem} />
       </div>
       {items.map((item) => (
-        <ListItem item={item} onRemove={handleRemoveItem} />
+        <ListItem item={item} key={item} onRemove={handleRemoveItem} />
       ))}
     </ul>
   );
