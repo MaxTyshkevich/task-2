@@ -24,41 +24,25 @@ const RenderCountLabel = ({
   );
 };
 
-const AddToEndButton =  memo(({ onClick }: { onClick: () => void }) => {
-  const counter = useRenderCounter();
-  return (
-    <div className="button">
-      <button onClick={onClick}>Add to end</button>
-      <RenderCountLabel label="Button" count={counter} />
-    </div>
-  );
-});
 
-const AddToStartButton = memo(({ onClick }: { onClick: () => void }) => {
-  const counter = useRenderCounter();
-  return (
-    <div>
-      <button onClick={onClick}>Add to start</button>
-      <RenderCountLabel label="Button" count={counter} />
-    </div>
-  );
-});
+const ButtonWithLabel = memo(({
+    action,
+    onClick,
+    btnText,
+  }: { 
+    onClick: () => void;
+    btnText: string;
+    action?: Mode;
+    }) => {
+    const counter = useRenderCounter();
 
-const ChangeModeButton = memo(({
-  action,
-  onClick,
-}: {
-  action: Mode;
-  onClick: () => void;
-}) => {
-  const counter = useRenderCounter();
-  return (
+    return (
     <div>
-      <button onClick={onClick}>change mode: {action}</button>
+      <button onClick={onClick}>{btnText} {action}</button>
       <RenderCountLabel label="Button" count={counter} />
     </div>
-  );
-});
+    )
+})
 
 const ListItem = memo(({
   item,
@@ -78,7 +62,7 @@ const ListItem = memo(({
   );
 });
 
-let index = 0;
+
 
 const List = () => {
 
@@ -91,22 +75,22 @@ const List = () => {
     setAction((prev) => (prev === 'add' ? 'remove' : 'add'));
   },[]);
 
-  const handlRemoveItems = () => {
+  const handlRemoveItems = useCallback(() => {
     setItems((prev) => prev.slice(0, prev.length - 1));
-  };
+  }, []);
 
   const handleRemoveItem = useCallback((item: string) => {
     setItems((prev) => prev.filter((i) => i !== item));
   },[]);
 
   const handleAddItem = useCallback(() => {
-    index++;
-    setItems((prev) => [...prev, `${index}-item`]);
+    refIndex.current += 1;
+    setItems((prev) => [...prev, `${refIndex.current}-item`]);
   },[]);
 
   const handleAddToStart = useCallback(() => {
-    index++;
-    setItems((prev) => [`${index}-item`, ...prev]);
+    refIndex.current += 1;
+    setItems((prev) => [`${refIndex.current}-item`, ...prev]);
   },[]);
 
   useEffect(() => {
@@ -116,17 +100,18 @@ const List = () => {
     );
 
     return () => clearInterval(timerId); 
-  }, [action]);
+  }, [action, handleAddItem, handlRemoveItems]);
 
   return (
     <ul className="list">
       <RenderCountLabel label="List" count={counter} />
       <br />
-      <ChangeModeButton action={action} onClick={handleChangeAction} />
+    
+      <ButtonWithLabel btnText='change mode:' action={action} onClick={handleChangeAction} />
       <br />
       <div className="btn-actions">
-        <AddToStartButton onClick={handleAddToStart} />
-        <AddToEndButton onClick={handleAddItem} />
+         <ButtonWithLabel btnText='Add to start' onClick={handleAddToStart} />
+         <ButtonWithLabel btnText='Add to end' onClick={handleAddItem} />
       </div>
       {items.map((item) => (
         <ListItem item={item} key={item} onRemove={handleRemoveItem} />
