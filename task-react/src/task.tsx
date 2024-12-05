@@ -51,9 +51,29 @@ const ListItem = memo(({
   item: string;
   onRemove: (item: string) => void;
 }) => {
-  const onClick = () => {};
+  const itemRef = useRef<HTMLLIElement>(null);
+  const onClick = () => {
+    if (itemRef?.current) {
+      itemRef.current.animate([
+      {
+        transform: 'scale(1)',
+        opacity: 1,
+      },
+      {
+        transform: 'scale(1.2)',
+        opacity: 0.6},
+      { 
+        transform: 'scale(1)',
+        opacity: 1
+      }],
+        {
+         duration: 1500 
+        }
+      )
+    }
+  };
   return (
-    <li onClick={onClick} className="li-item">
+    <li onClick={onClick} className="li-item" ref={itemRef}>
       {item}
       <button className="btn-remove" onClick={() => onRemove(item)}>
         x
